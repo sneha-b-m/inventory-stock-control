@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 const navigation = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Items", href: "/items" },
+  { name: "Categories", href: "/categories" },
   { name: "Locations", href: "/locations" },
   { name: "Movements", href: "/movements" },
   { name: "Users / Assignments", href: "/users" },

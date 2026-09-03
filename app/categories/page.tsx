@@ -1,25 +1,25 @@
 import Link from "next/link";
-import { getLocationsForList } from "@/lib/inventory";
+import { getCategoriesForList } from "@/lib/inventory";
 
-export default async function LocationsPage() {
-  const locations = await getLocationsForList();
+export default async function CategoriesPage() {
+  const categories = await getCategoriesForList();
 
   return (
     <main>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Locations</h1>
+          <h1 className="text-2xl font-semibold">Categories</h1>
 
           <p className="mt-2 text-gray-600">
-            View inventory locations and assigned staff.
+            View inventory categories and their items.
           </p>
         </div>
 
         <Link
-          href="/locations/new"
+          href="/categories/new"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          Create location
+          Create category
         </Link>
       </div>
 
@@ -28,55 +28,43 @@ export default async function LocationsPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                Code
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                 Name
               </th>
+
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                Address
+                Description
               </th>
+
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                Assigned Staff
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                Created Date
+                Number of Items
               </th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-gray-200">
-            {locations.map((location) => (
-              <tr key={location.id}>
+            {categories.map((category) => (
+              <tr key={category.id}>
                 <td className="px-4 py-3 text-sm font-medium">
-                  {location.code}
+                  {category.name}
                 </td>
 
                 <td className="px-4 py-3 text-sm">
-                  {location.name}
+                  {category.description || "—"}
                 </td>
 
                 <td className="px-4 py-3 text-sm">
-                  {location.address || "—"}
-                </td>
-
-                <td className="px-4 py-3 text-sm">
-                  {location.assignedStaffCount}
-                </td>
-
-                <td className="px-4 py-3 text-sm">
-                  {location.createdAt.toLocaleDateString()}
+                  {category.itemCount}
                 </td>
               </tr>
             ))}
 
-            {locations.length === 0 && (
+            {categories.length === 0 && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={3}
                   className="px-4 py-8 text-center text-sm text-gray-500"
                 >
-                  No locations found.
+                  No categories found.
                 </td>
               </tr>
             )}
