@@ -3,7 +3,8 @@ import { getCategoriesForList } from "@/lib/inventory";
 import { requireUser } from "@/lib/auth";
 
 export default async function CategoriesPage() {
-  await requireUser();
+  const user = await requireUser();
+const isManager = user.role === "MANAGER";
 
   const categories = await getCategoriesForList();
 
@@ -18,12 +19,14 @@ export default async function CategoriesPage() {
           </p>
         </div>
 
-        <Link
-          href="/categories/new"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Create category
-        </Link>
+        {isManager && (
+  <Link
+    href="/categories/new"
+    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+  >
+    Create category
+  </Link>
+)}
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white">

@@ -2,23 +2,19 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-
 import { prisma } from "@/lib/prisma";
-import { requireManager } from "@/lib/auth";
+import { requireManager, requireUser } from "@/lib/auth";
 
 export async function createCategory(formData: FormData) {
-  await requireManager();
+  const manager = await requireManager();
 
   const name = String(formData.get("name") ?? "").trim();
-
   if (!name) {
     throw new Error("Category name is required.");
   }
 
   const existingCategory = await prisma.category.findUnique({
-    where: {
-      name,
-    },
+    where: { name },
   });
 
   if (existingCategory) {
@@ -28,17 +24,15 @@ export async function createCategory(formData: FormData) {
   await prisma.category.create({
     data: {
       name,
-      description: String(formData.get("description") ?? "").trim() || null,
     },
   });
 
+  revalidatePath("/items");
   revalidatePath("/categories");
-
-  redirect("/categories");
 }
 
 export async function createLocation(formData: FormData) {
-  await requireManager();
+  const manager = await requireManager();
 
   const name = String(formData.get("name") ?? "").trim();
   const code = String(formData.get("code") ?? "").trim();
@@ -51,27 +45,23 @@ export async function createLocation(formData: FormData) {
     throw new Error("Location code is required.");
   }
 
-  const existingLocation = await prisma.location.findFirst({
-    where: {
-      OR: [{ name }, { code }],
-    },
+  const existingLocation = await prisma.location.findUnique({
+    where: { name },
   });
 
   if (existingLocation) {
-    throw new Error("A location with this name or code already exists.");
+    throw new Error("A location with this name already exists.");
   }
 
   await prisma.location.create({
     data: {
       name,
       code,
-      address: String(formData.get("address") ?? "").trim() || null,
     },
   });
 
+  revalidatePath("/items");
   revalidatePath("/locations");
-
-  redirect("/locations");
 }
 
 export async function createItem(formData: FormData) {
@@ -79,18 +69,10 @@ export async function createItem(formData: FormData) {
 
   const sku = String(formData.get("sku") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
-
-  const unitOfMeasure = String(
-    formData.get("unitOfMeasure") ?? ""
-  ).trim();
-
-  const reorderLevelValue = String(
-    formData.get("reorderLevel") ?? ""
-  ).trim();
-
-  const categoryIdValue = String(
-    formData.get("categoryId") ?? ""
-  ).trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const unitOfMeasure = String(formData.get("unitOfMeasure") ?? "").trim();
+  const reorderLevelValue = String(formData.get("reorderLevel") ?? "").trim();
+  const categoryIdValue = String(formData.get("categoryId") ?? "").trim();
 
   if (!sku) {
     throw new Error("SKU is required.");
@@ -115,10 +97,7 @@ export async function createItem(formData: FormData) {
   const reorderLevel = Number(reorderLevelValue);
   const categoryId = Number(categoryIdValue);
 
-  if (
-    !Number.isInteger(reorderLevel) ||
-    reorderLevel < 0
-  ) {
+  if (!Number.isInteger(reorderLevel) || reorderLevel < 0) {
     throw new Error("Reorder level must be zero or a positive integer.");
   }
 
@@ -127,9 +106,7 @@ export async function createItem(formData: FormData) {
   }
 
   const existingItem = await prisma.item.findUnique({
-    where: {
-      sku,
-    },
+    where: { sku },
   });
 
   if (existingItem) {
@@ -137,9 +114,7 @@ export async function createItem(formData: FormData) {
   }
 
   const category = await prisma.category.findUnique({
-    where: {
-      id: categoryId,
-    },
+    where: { id: categoryId },
   });
 
   if (!category) {
@@ -150,8 +125,7 @@ export async function createItem(formData: FormData) {
     data: {
       sku,
       name,
-      description:
-        String(formData.get("description") ?? "").trim() || null,
+      description,
       unitOfMeasure,
       reorderLevel,
       categoryId,
@@ -173,27 +147,230 @@ export async function createItem(formData: FormData) {
   redirect(`/items/${item.id}`);
 }
 
-export async function archiveItem(itemId: number) {
+export async function updateItem(itemId: number, formData: FormData) {
+  const manager = await requireManager();
+
   if (!Number.isInteger(itemId) || itemId <= 0) {
     throw new Error("Invalid item ID.");
   }
 
-  const manager = await requireManager();
+  const existingItem = await prisma.item.findUnique({
+    where: { id: itemId },
+    include: { category: true },
+  });
+
+  if (!existingItem) {
+    throw new Error("Item not found.");
+  }
+
+  const sku = String(formData.get("sku") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const unitOfMeasure = String(formData.get("unitOfMeasure") ?? "").trim();
+  const reorderLevelValue = String(formData.get("reorderLevel") ?? "").trim();
+  const categoryIdValue = String(formData.get("categoryId") ?? "").trim();
+
+  if (!sku) {
+    throw new Error("SKU is required.");
+  }
+
+  if (!name) {
+    throw new Error("Item name is required.");
+  }
+
+  if (!unitOfMeasure) {
+    throw new Error("Unit of measure is required.");
+  }
+
+  if (!reorderLevelValue) {
+    throw new Error("Reorder level is required.");
+  }
+
+  if (!categoryIdValue) {
+    throw new Error("Category is required.");
+  }
+
+  const reorderLevel = Number(reorderLevelValue);
+  const categoryId = Number(categoryIdValue);
+
+  if (!Number.isInteger(reorderLevel) || reorderLevel < 0) {
+    throw new Error("Reorder level must be zero or a positive integer.");
+  }
+
+  if (!Number.isInteger(categoryId) || categoryId <= 0) {
+    throw new Error("A valid category is required.");
+  }
+
+  const duplicateSku = await prisma.item.findFirst({
+    where: {
+      sku,
+      NOT: {
+        id: itemId,
+      },
+    },
+  });
+
+  if (duplicateSku) {
+    throw new Error("An item with this SKU already exists.");
+  }
+
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+  });
+
+  if (!category) {
+    throw new Error("Selected category does not exist.");
+  }
+
+  const changes: Array<{
+    fieldName: string;
+    oldValue: string | null;
+    newValue: string | null;
+    description: string;
+  }> = [];
+
+  if (existingItem.sku !== sku) {
+    changes.push({
+      fieldName: "sku",
+      oldValue: existingItem.sku,
+      newValue: sku,
+      description: "SKU changed",
+    });
+  }
+
+  if (existingItem.name !== name) {
+    changes.push({
+      fieldName: "name",
+      oldValue: existingItem.name,
+      newValue: name,
+      description: "Name changed",
+    });
+  }
+
+  if (existingItem.description !== description) {
+    changes.push({
+      fieldName: "description",
+      oldValue: existingItem.description,
+      newValue: description,
+      description: "Description changed",
+    });
+  }
+
+  if (existingItem.unitOfMeasure !== unitOfMeasure) {
+    changes.push({
+      fieldName: "unitOfMeasure",
+      oldValue: existingItem.unitOfMeasure,
+      newValue: unitOfMeasure,
+      description: "Unit of measure changed",
+    });
+  }
+
+  if (existingItem.reorderLevel !== reorderLevel) {
+    changes.push({
+      fieldName: "reorderLevel",
+      oldValue: String(existingItem.reorderLevel),
+      newValue: String(reorderLevel),
+      description: "Reorder level changed",
+    });
+  }
+
+  if (existingItem.categoryId !== categoryId) {
+    changes.push({
+      fieldName: "categoryId/category",
+      oldValue: existingItem.category?.name ?? String(existingItem.categoryId),
+      newValue: category.name,
+      description: "Category changed",
+    });
+  }
+
+  await prisma.item.update({
+    where: { id: itemId },
+    data: {
+      sku,
+      name,
+      description,
+      unitOfMeasure,
+      reorderLevel,
+      categoryId,
+    },
+  });
+
+  if (changes.length > 0) {
+    await prisma.itemTimelineEvent.createMany({
+      data: changes.map((change) => ({
+        itemId,
+        createdById: manager.id,
+        eventType: "FIELD_CHANGED",
+        fieldName: change.fieldName,
+        oldValue: change.oldValue,
+        newValue: change.newValue,
+        description: change.description,
+      })),
+    });
+  }
+
+  revalidatePath("/items");
+  revalidatePath(`/items/${itemId}`);
+
+  redirect(`/items/${itemId}`);
+}
+
+export async function addItemNote(itemId: number, formData: FormData) {
+  const user = await requireUser();
+
+  if (!Number.isInteger(itemId) || itemId <= 0) {
+    throw new Error("Invalid item ID.");
+  }
 
   const item = await prisma.item.findUnique({
-    where: {
-      id: itemId,
-    },
+    where: { id: itemId },
   });
 
   if (!item) {
     throw new Error("Item not found.");
   }
 
-  await prisma.item.update({
-    where: {
-      id: itemId,
+  const note = String(formData.get("note") ?? "").trim();
+
+  if (!note) {
+    throw new Error("Note cannot be empty.");
+  }
+
+  await prisma.itemTimelineEvent.create({
+    data: {
+      itemId,
+      createdById: user.id,
+      eventType: "NOTE",
+      description: note,
     },
+  });
+
+  revalidatePath(`/items/${itemId}`);
+
+  redirect(`/items/${itemId}`);
+}
+
+export async function archiveItem(itemId: number) {
+  const manager = await requireManager();
+
+  if (!Number.isInteger(itemId) || itemId <= 0) {
+    throw new Error("Invalid item ID.");
+  }
+
+  const item = await prisma.item.findUnique({
+    where: { id: itemId },
+  });
+
+  if (!item) {
+    throw new Error("Item not found.");
+  }
+
+  if (item.archived) {
+    throw new Error("Item is already archived.");
+  }
+
+  await prisma.item.update({
+    where: { id: itemId },
     data: {
       archived: true,
     },
@@ -210,29 +387,31 @@ export async function archiveItem(itemId: number) {
 
   revalidatePath("/items");
   revalidatePath(`/items/${itemId}`);
+
+  redirect(`/items/${itemId}`);
 }
 
 export async function restoreItem(itemId: number) {
+  const manager = await requireManager();
+
   if (!Number.isInteger(itemId) || itemId <= 0) {
     throw new Error("Invalid item ID.");
   }
 
-  const manager = await requireManager();
-
   const item = await prisma.item.findUnique({
-    where: {
-      id: itemId,
-    },
+    where: { id: itemId },
   });
 
   if (!item) {
     throw new Error("Item not found.");
   }
 
+  if (!item.archived) {
+    throw new Error("Item is already active.");
+  }
+
   await prisma.item.update({
-    where: {
-      id: itemId,
-    },
+    where: { id: itemId },
     data: {
       archived: false,
     },
@@ -249,4 +428,6 @@ export async function restoreItem(itemId: number) {
 
   revalidatePath("/items");
   revalidatePath(`/items/${itemId}`);
+
+  redirect(`/items/${itemId}`);
 }

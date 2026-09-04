@@ -3,7 +3,8 @@ import { getLocationsForList } from "@/lib/inventory";
 import { requireUser } from "@/lib/auth";
 
 export default async function LocationsPage() {
-  await requireUser();
+  const user = await requireUser();
+const isManager = user.role === "MANAGER";
 
   const locations = await getLocationsForList();
 
@@ -18,12 +19,14 @@ export default async function LocationsPage() {
           </p>
         </div>
 
-        <Link
-          href="/locations/new"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Create location
-        </Link>
+        {isManager && (
+  <Link
+    href="/locations/new"
+    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+  >
+    Create location
+  </Link>
+)}
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white">
