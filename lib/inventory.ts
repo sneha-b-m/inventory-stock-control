@@ -1,48 +1,36 @@
 import { prisma } from "./prisma";
+import {
+  getItemStockByLocation,
+  getItemTotalStock,
+} from "./stock";
 
 export async function getItemsForList() {
   const items = await prisma.item.findMany({
     include: {
       category: true,
-      stockMovements: true,
     },
     orderBy: {
       name: "asc",
     },
   });
 
-  return items.map((item) => {
-    const totalOnHand = item.stockMovements.reduce((stock, movement) => {
-      switch (movement.kind) {
-        case "RECEIPT":
-          return stock + movement.quantity;
+  return Promise.all(
+    items.map(async (item) => {
+      const totalOnHand = await getItemTotalStock(item.id);
 
-        case "ISSUE":
-          return stock - movement.quantity;
-
-        case "ADJUSTMENT":
-          return stock + movement.quantity;
-
-        case "TRANSFER":
-          return stock;
-
-        default:
-          return stock;
-      }
-    }, 0);
-
-    return {
-      id: item.id,
-      sku: item.sku,
-      name: item.name,
-      description: item.description,
-      unitOfMeasure: item.unitOfMeasure,
-      reorderLevel: item.reorderLevel,
-      archived: item.archived,
-      category: item.category,
-      totalOnHand,
-    };
-  });
+      return {
+        id: item.id,
+        sku: item.sku,
+        name: item.name,
+        description: item.description,
+        unitOfMeasure: item.unitOfMeasure,
+        reorderLevel: item.reorderLevel,
+        archived: item.archived,
+        category: item.category,
+        totalOnHand,
+      };
+    })
+  );
 }
 
 export async function getItemDetail(itemId: number) {
@@ -70,57 +58,15 @@ export async function getItemDetail(itemId: number) {
     return null;
   }
 
-  const stockByLocation = new Map<
-    number,
-    {
-      location: typeof item.stockMovements[number]["location"];
-      quantity: number;
-    }
-  >();
+  const stockByLocationData = await getItemStockByLocation(itemId);
 
-  for (const movement of item.stockMovements) {
-    if (
-      movement.kind === "RECEIPT" ||
-      movement.kind === "ISSUE" ||
-      movement.kind === "ADJUSTMENT"
-    ) {
-      if (movement.locationId !== null) {
-        const current = stockByLocation.get(movement.locationId);
-
-        const change =
-          movement.kind === "ISSUE"
-            ? -movement.quantity
-            : movement.quantity;
-
-        stockByLocation.set(movement.locationId, {
-          location: movement.location,
-          quantity: (current?.quantity ?? 0) + change,
-        });
-      }
-    }
-
-    if (movement.kind === "TRANSFER") {
-      if (movement.sourceLocationId !== null) {
-        const current = stockByLocation.get(movement.sourceLocationId);
-
-        stockByLocation.set(movement.sourceLocationId, {
-          location: movement.sourceLocation,
-          quantity: (current?.quantity ?? 0) - movement.quantity,
-        });
-      }
-
-      if (movement.destinationLocationId !== null) {
-        const current = stockByLocation.get(
-          movement.destinationLocationId
-        );
-
-        stockByLocation.set(movement.destinationLocationId, {
-          location: movement.destinationLocation,
-          quantity: (current?.quantity ?? 0) + movement.quantity,
-        });
-      }
-    }
-  }
+const stockByLocation = stockByLocationData.map((stock) => ({
+  location: {
+    id: stock.locationId,
+    name: stock.locationName,
+  },
+  quantity: stock.quantity,
+}));
 
   return {
     id: item.id,
@@ -132,7 +78,7 @@ export async function getItemDetail(itemId: number) {
     archived: item.archived,
     category: item.category,
     movements: item.stockMovements,
-    stockByLocation: Array.from(stockByLocation.values()),
+    stockByLocation,
   };
 }
 
@@ -179,6 +125,5 @@ export async function getCategoriesForList() {
     name: category.name,
     description: category.description,
     itemCount: category._count.items,
-    
   }));
 }

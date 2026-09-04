@@ -183,9 +183,11 @@ model StockMovement {
   kind StockMovementKind
 
   // Quantity involved in the movement.
-  // Positive integer; business rules will determine whether
-  // it represents stock entering or leaving a location.
-  quantity Int
+//
+// RECEIPT, ISSUE, and TRANSFER require a positive quantity.
+// ADJUSTMENT may use a positive or negative quantity, but
+// zero is not allowed. Negative adjustments reduce stock.
+quantity Int
 
   // Used for RECEIPT, ISSUE, and ADJUSTMENT.
   locationId Int?

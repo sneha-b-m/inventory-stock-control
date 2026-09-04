@@ -39,49 +39,59 @@ export default async function ItemDetailPage({
         </Link>
 
         <div className="mt-4 flex items-center justify-between">
-  <div>
-    <h1 className="text-2xl font-semibold">{item.name}</h1>
-    <p className="mt-1 text-sm text-gray-600">
-      Item details and stock history
-    </p>
-  </div>
+          <div>
+            <h1 className="text-2xl font-semibold">{item.name}</h1>
 
-  <div className="flex items-center gap-3">
-    {item.archived ? (
-      <form action={restoreItem.bind(null, item.id)}>
-        <button
-          type="submit"
-          className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-        >
-          Restore
-        </button>
-      </form>
-    ) : (
-      <form action={archiveItem.bind(null, item.id)}>
-        <button
-          type="submit"
-          className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-        >
-          Archive
-        </button>
-      </form>
-    )}
+            <p className="mt-1 text-sm text-gray-600">
+              Item details and stock history
+            </p>
+          </div>
 
-    <span
-      className={`rounded-full px-3 py-1 text-sm font-medium ${
-        item.archived
-          ? "bg-gray-100 text-gray-600"
-          : "bg-green-100 text-green-700"
-      }`}
-    >
-      {item.archived ? "Archived" : "Active"}
-    </span>
-  </div>
-</div>
+          <div className="flex items-center gap-3">
+            {!item.archived && (
+              <Link
+                href={`/movements/new?itemId=${item.id}`}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Record movement
+              </Link>
+            )}
 
-<p className="mt-3 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
-  Archived items will be blocked from new stock movements in a later session.
-</p>
+            {item.archived ? (
+              <form action={restoreItem.bind(null, item.id)}>
+                <button
+                  type="submit"
+                  className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                >
+                  Restore
+                </button>
+              </form>
+            ) : (
+              <form action={archiveItem.bind(null, item.id)}>
+                <button
+                  type="submit"
+                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Archive
+                </button>
+              </form>
+            )}
+
+            <span
+              className={`rounded-full px-3 py-1 text-sm font-medium ${
+                item.archived
+                  ? "bg-gray-100 text-gray-600"
+                  : "bg-green-100 text-green-700"
+              }`}
+            >
+              {item.archived ? "Archived" : "Active"}
+            </span>
+          </div>
+        </div>
+
+        <p className="mt-3 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          Archived items will be blocked from new stock movements in a later session.
+        </p>
       </div>
 
       {/* Item information */}
