@@ -103,14 +103,23 @@ const isManager = user.role === "MANAGER";
           </p>
         </div>
 
-        {isManager && (
+        <div className="flex items-center gap-3">
   <Link
-    href="/items/new"
-    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+    href="/exports/stock-position"
+    className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
   >
-    Create item
+    Export stock CSV
   </Link>
-)}
+
+  {isManager && (
+    <Link
+      href="/items/new"
+      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      Create item
+    </Link>
+  )}
+</div>
       </div>
 
       <form

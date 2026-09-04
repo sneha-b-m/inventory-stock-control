@@ -32,12 +32,21 @@ export default async function MovementsPage() {
           </p>
         </div>
 
-        <Link
-          href="/movements/new"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Record movement
-        </Link>
+        <div className="flex items-center gap-3">
+  <Link
+    href="/exports/stock-position"
+    className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+  >
+    Export stock CSV
+  </Link>
+
+  <Link
+    href="/movements/new"
+    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+  >
+    Record movement
+  </Link>
+</div>
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white">

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 
-import { getCurrentUser } from "@/lib/auth";
 import { logout } from "@/app/actions/auth";
+import { getCurrentUser } from "@/lib/auth";
+import { getLowStockAlertCount } from "@/lib/alerts";
 
 export const metadata: Metadata = {
   title: "Inventory & Stock Control",
@@ -17,6 +18,7 @@ const navigation = [
   { name: "Locations", href: "/locations" },
   { name: "Movements", href: "/movements" },
   { name: "Users / Assignments", href: "/users" },
+  { name: "Alerts", href: "/alerts" },
 ];
 
 export default async function RootLayout({
@@ -25,6 +27,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
+
+  const lowStockAlertCount = user
+    ? await getLowStockAlertCount()
+    : 0;
 
   return (
     <html lang="en">
@@ -36,6 +42,7 @@ export default async function RootLayout({
               <h1 className="text-lg font-semibold">
                 Inventory Control
               </h1>
+
               <p className="mt-1 text-sm text-gray-500">
                 Stock Management
               </p>
@@ -51,11 +58,27 @@ export default async function RootLayout({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    className="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   >
-                    {item.name}
+                    <span>{item.name}</span>
+
+                    {item.href === "/alerts" &&
+                    lowStockAlertCount > 0 ? (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                        {lowStockAlertCount}
+                      </span>
+                    ) : null}
                   </Link>
                 ))}
+
+                {user?.role === "MANAGER" ? (
+                  <Link
+                    href="/imports"
+                    className="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  >
+                    Imports
+                  </Link>
+                ) : null}
               </div>
             </nav>
           </aside>
@@ -76,6 +99,7 @@ export default async function RootLayout({
                     <p className="text-sm font-medium text-gray-900">
                       {user.name}
                     </p>
+
                     <p className="text-xs text-gray-500">
                       {user.role}
                     </p>
