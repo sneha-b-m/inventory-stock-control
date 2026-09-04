@@ -9,6 +9,9 @@ export async function createCategory(formData: FormData) {
   const manager = await requireManager();
 
   const name = String(formData.get("name") ?? "").trim();
+  const description =
+    String(formData.get("description") ?? "").trim() || null;
+
   if (!name) {
     throw new Error("Category name is required.");
   }
@@ -24,6 +27,7 @@ export async function createCategory(formData: FormData) {
   await prisma.category.create({
     data: {
       name,
+      description,
     },
   });
 
@@ -36,6 +40,7 @@ export async function createLocation(formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim();
   const code = String(formData.get("code") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim() || null;
 
   if (!name) {
     throw new Error("Location name is required.");
@@ -57,6 +62,7 @@ export async function createLocation(formData: FormData) {
     data: {
       name,
       code,
+      address,
     },
   });
 

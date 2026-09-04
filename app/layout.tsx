@@ -17,7 +17,6 @@ const navigation = [
   { name: "Categories", href: "/categories" },
   { name: "Locations", href: "/locations" },
   { name: "Movements", href: "/movements" },
-  { name: "Users / Assignments", href: "/users" },
   { name: "Alerts", href: "/alerts" },
 ];
 
@@ -72,12 +71,21 @@ export default async function RootLayout({
                 ))}
 
                 {user?.role === "MANAGER" ? (
-                  <Link
-                    href="/imports"
-                    className="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                  >
-                    Imports
-                  </Link>
+                  <>
+                    <Link
+                      href="/users"
+                      className="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    >
+                      Users / Assignments
+                    </Link>
+
+                    <Link
+                      href="/imports"
+                      className="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    >
+                      Imports
+                    </Link>
+                  </>
                 ) : null}
               </div>
             </nav>

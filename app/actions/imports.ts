@@ -34,8 +34,6 @@ function getFile(formData: FormData): File {
   return value;
 }
 
-
-
 export async function importItemsCsv(
   formData: FormData,
 ): Promise<ImportResult> {
@@ -155,7 +153,7 @@ export async function importItemsCsv(
     }
 
     try {
-      await prisma.item.create({
+      const item = await prisma.item.create({
         data: {
           sku,
           name,
@@ -163,6 +161,15 @@ export async function importItemsCsv(
           unitOfMeasure,
           reorderLevel: Number(reorderLevel),
           categoryId: category.id,
+        },
+      });
+
+      await prisma.itemTimelineEvent.create({
+        data: {
+          itemId: item.id,
+          createdById: manager.id,
+          eventType: "ITEM_CREATED",
+          description: "Item imported from CSV",
         },
       });
 
