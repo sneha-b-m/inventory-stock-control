@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { getLocationsForList } from "@/lib/inventory";
+import { requireUser } from "@/lib/auth";
 
 export default async function LocationsPage() {
+  await requireUser();
+
   const locations = await getLocationsForList();
 
   return (

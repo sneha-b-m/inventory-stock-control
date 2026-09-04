@@ -55,6 +55,24 @@ model User {
 
   // Low-stock alerts dismissed by this user.
   lowStockDismissals LowStockAlertDismissal[]
+
+  // Authentication sessions for this user.
+sessions UserSession[]
+}
+
+// ---------------------------------------------------------
+// USER SESSION
+// ---------------------------------------------------------
+
+model UserSession {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  userId    Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 // ---------------------------------------------------------

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { getCategoriesForList } from "@/lib/inventory";
+import { requireUser } from "@/lib/auth";
 
 export default async function CategoriesPage() {
+  await requireUser();
+
   const categories = await getCategoriesForList();
 
   return (

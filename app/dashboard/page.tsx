@@ -1,4 +1,8 @@
-export default function DashboardPage() {
+import { requireUser } from "@/lib/auth";
+
+export default async function DashboardPage() {
+  await requireUser();
+
   return (
     <div>
       <h1 className="text-2xl font-semibold">Dashboard</h1>

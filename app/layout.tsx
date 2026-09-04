@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 
+import { getCurrentUser } from "@/lib/auth";
+import { logout } from "@/app/actions/auth";
+
 export const metadata: Metadata = {
   title: "Inventory & Stock Control",
   description: "Inventory and stock control application",
@@ -16,11 +19,13 @@ const navigation = [
   { name: "Users / Assignments", href: "/users" },
 ];
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser();
+
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-50 text-gray-900">
@@ -65,9 +70,34 @@ export default function RootLayout({
                 </h2>
               </div>
 
-              <div className="text-sm text-gray-500">
-                Session 1
-              </div>
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      {user.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {user.role}
+                    </p>
+                  </div>
+
+                  <form action={logout}>
+                    <button
+                      type="submit"
+                      className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Logout
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                >
+                  Sign in
+                </Link>
+              )}
             </header>
 
             {/* Content */}

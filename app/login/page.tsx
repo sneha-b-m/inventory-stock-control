@@ -1,4 +1,16 @@
-export default function LoginPage() {
+import { login } from "@/app/actions/auth";
+
+type LoginPageProps = {
+  searchParams: Promise<{
+    error?: string;
+  }>;
+};
+
+export default async function LoginPage({
+  searchParams,
+}: LoginPageProps) {
+  const params = await searchParams;
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
       <div className="w-full max-w-md">
@@ -12,7 +24,13 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form className="space-y-5">
+          {params.error === "invalid" && (
+            <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              Invalid email or password.
+            </div>
+          )}
+
+          <form action={login} className="space-y-5">
             <div>
               <label
                 htmlFor="email"

@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { createLocation } from "@/app/actions/catalog";
+import { requireManager } from "@/lib/auth";
 
-export default function NewLocationPage() {
+export default async function NewLocationPage() {
+  await requireManager();
   return (
     <main className="max-w-2xl">
       <div className="mb-6">

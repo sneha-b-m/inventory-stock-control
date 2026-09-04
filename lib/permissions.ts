@@ -1,5 +1,7 @@
 import type { UserRole } from "@/app/generated/prisma/client";
 
+import { prisma } from "@/lib/prisma";
+
 // Role helpers
 
 export function isManager(role: UserRole): boolean {
@@ -44,5 +46,41 @@ export function canViewAllLocations(role: UserRole): boolean {
   return role === "MANAGER";
 }
 
-// TODO: Add location-specific permission checks.
-// STAFF users should only access locations assigned to them.
+// Location-specific permission helpers
+
+export async function canUserAccessLocation(
+  userId: number,
+  role: UserRole,
+  locationId: number,
+): Promise<boolean> {
+  if (role === "MANAGER") {
+    return true;
+  }
+
+  const assignment = await prisma.staffLocationAssignment.findUnique({
+    where: {
+      userId_locationId: {
+        userId,
+        locationId,
+      },
+    },
+  });
+
+  return Boolean(assignment);
+}
+
+export async function requireLocationAccess(
+  userId: number,
+  role: UserRole,
+  locationId: number,
+): Promise<void> {
+  const allowed = await canUserAccessLocation(
+    userId,
+    role,
+    locationId,
+  );
+
+  if (!allowed) {
+    throw new Error("User does not have access to this location.");
+  }
+}

@@ -2,6 +2,7 @@ import { archiveItem, restoreItem } from "@/app/actions/catalog";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getItemDetail } from "@/lib/inventory";
+import { requireUser } from "@/lib/auth";
 
 type ItemDetailPageProps = {
   params: Promise<{
@@ -12,6 +13,8 @@ type ItemDetailPageProps = {
 export default async function ItemDetailPage({
   params,
 }: ItemDetailPageProps) {
+  await requireUser();
+
   const { id } = await params;
 
   const item = await getItemDetail(Number(id));

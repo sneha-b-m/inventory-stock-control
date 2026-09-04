@@ -4,28 +4,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
-
-/*
- * TODO: Session 3
- * Authentication is not implemented yet.
- * Replace the demo manager lookup below with requireManager()
- * when authentication and authorization are added.
- */
-async function getDemoManager() {
-  const manager = await prisma.user.findUnique({
-  where: {
-    email: "manager@example.com",
-  },
-});
-
-  if (!manager) {
-    throw new Error("Demo Manager user not found.");
-  }
-
-  return manager;
-}
+import { requireManager } from "@/lib/auth";
 
 export async function createCategory(formData: FormData) {
+  await requireManager();
+
   const name = String(formData.get("name") ?? "").trim();
 
   if (!name) {
@@ -55,6 +38,8 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function createLocation(formData: FormData) {
+  await requireManager();
+
   const name = String(formData.get("name") ?? "").trim();
   const code = String(formData.get("code") ?? "").trim();
 
@@ -90,8 +75,11 @@ export async function createLocation(formData: FormData) {
 }
 
 export async function createItem(formData: FormData) {
+  const manager = await requireManager();
+
   const sku = String(formData.get("sku") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
+
   const unitOfMeasure = String(
     formData.get("unitOfMeasure") ?? ""
   ).trim();
@@ -158,13 +146,6 @@ export async function createItem(formData: FormData) {
     throw new Error("Selected category does not exist.");
   }
 
-  /*
-   * TODO: Session 3
-   * Replace getDemoManager() with requireManager()
-   * once authentication is implemented.
-   */
-  const manager = await getDemoManager();
-
   const item = await prisma.item.create({
     data: {
       sku,
@@ -197,12 +178,7 @@ export async function archiveItem(itemId: number) {
     throw new Error("Invalid item ID.");
   }
 
-  /*
-   * TODO: Session 3
-   * Replace getDemoManager() with requireManager()
-   * once authentication is implemented.
-   */
-  const manager = await getDemoManager();
+  const manager = await requireManager();
 
   const item = await prisma.item.findUnique({
     where: {
@@ -241,12 +217,7 @@ export async function restoreItem(itemId: number) {
     throw new Error("Invalid item ID.");
   }
 
-  /*
-   * TODO: Session 3
-   * Replace getDemoManager() with requireManager()
-   * once authentication is implemented.
-   */
-  const manager = await getDemoManager();
+  const manager = await requireManager();
 
   const item = await prisma.item.findUnique({
     where: {

@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { createCategory } from "@/app/actions/catalog";
+import { requireManager } from "@/lib/auth";
 
-export default function NewCategoryPage() {
+export default async function NewCategoryPage() {
+  await requireManager();
   return (
     <main className="max-w-2xl">
       <div className="mb-6">

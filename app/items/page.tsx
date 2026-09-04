@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { getItemsForList } from "@/lib/inventory";
+import { requireUser } from "@/lib/auth";
 
 export default async function ItemsPage() {
+  await requireUser();
+
   const items = await getItemsForList();
 
   return (

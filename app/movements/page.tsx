@@ -1,4 +1,8 @@
-export default function MovementsPage() {
+import { requireUser } from "@/lib/auth";
+
+export default async function MovementsPage() {
+  await requireUser();
+
   return (
     <div>
       <h1 className="text-2xl font-semibold">Stock Movements</h1>

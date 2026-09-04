@@ -2,8 +2,11 @@ import Link from "next/link";
 
 import { createItem } from "@/app/actions/catalog";
 import { getCategoriesForList } from "@/lib/inventory";
+import { requireManager } from "@/lib/auth";
 
 export default async function NewItemPage() {
+  await requireManager();
+
   const categories = await getCategoriesForList();
 
   return (
